@@ -44,7 +44,8 @@
     const avatar = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(profile.avatar || '') ? `<img src="${esc(profile.avatar)}" alt="个人头像">` : '<span aria-hidden="true">✳</span>';
     return `<section class="profile-panel glass"><div class="profile-avatar">${avatar}</div><div class="profile-copy"><div class="eyebrow"><span></span> MY PROFILE</div><h2>${esc(profile.name || '你的名字')}</h2><p>${esc(profile.signature || '个性签名，留给以后的自己。')}</p><div class="profile-tags">${(profile.tags || []).map(t => `<span>${esc(t)}</span>`).join('') || '<span class="tag-empty">你的标签</span>'}</div></div></section>`;
   }
-  let contributionYear = new Date().getFullYear();
+  const contributionStart = '2026-11-30', contributionFirstYear = 2026;
+  let contributionYear = Math.max(contributionFirstYear, new Date().getFullYear());
   function contributionPanel(year = contributionYear) {
     const activity = data.activity || {};
     const today = new Date();
@@ -57,17 +58,17 @@
     let active = 0, index = offset;
     for (let cursor = new Date(first); cursor <= end; cursor.setDate(cursor.getDate()+1), index++) {
       const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
-      const future = cursor > lastToday;
+      const beforeStart = key < contributionStart, future = cursor > lastToday;
       const raw = Number(activity[key]);
-      const count = !future && Number.isFinite(raw) ? Math.max(0,raw) : 0;
+      const count = !beforeStart && !future && Number.isFinite(raw) ? Math.max(0,raw) : 0;
       if (count > 0) active++;
       const level = count === 0 ? 0 : count === 1 ? 1 : count <= 3 ? 2 : count <= 6 ? 3 : 4;
-      const label = future ? `${key}：尚未到来` : `${key}：${count} 次博客内容发布或更新`;
-      days.push(`<span class="contribution-day level-${level}${future ? ' is-future' : ''}" data-date="${key}" title="${label}" aria-label="${label}"></span>`);
+      const label = beforeStart ? `${key}：建站之前` : future ? `${key}：尚未到来` : `${key}：${count} 次博客内容发布或更新`;
+      days.push(`<span class="contribution-day level-${level}${future ? ' is-future' : ''}${beforeStart ? ' is-before-start' : ''}" data-date="${key}" title="${label}" aria-label="${label}"></span>`);
       if (cursor.getDate() === 1) labels.push(`<span style="grid-column:${Math.floor(index/7)+1}">${cursor.getMonth()+1}月</span>`);
     }
     const isCurrentYear = year >= today.getFullYear();
-    return `<section class="contribution-panel glass"><div class="contribution-header"><div><div class="eyebrow"><span></span> BLOG ACTIVITY</div><h2>博客贡献度</h2><p>记录每一次内容的发布与更新</p></div><div class="contribution-summary"><div class="contribution-year"><button type="button" data-year-step="-1" aria-label="查看上一年"${year <= 1900 ? ' disabled' : ''}>‹</button><span class="contribution-year-label" tabindex="-1">${year} 年</span><button type="button" data-year-step="1" aria-label="查看下一年"${isCurrentYear ? ' disabled' : ''}>›</button></div><span class="active-days">${active} 个活跃日</span></div></div><div class="contribution-scroll" tabindex="0" aria-label="左右滚动查看 ${year} 年全年贡献度"><div class="contribution-inner"><div class="contribution-months">${labels.join('')}</div><div class="contribution-grid" aria-label="${year} 年博客贡献度">${days.join('')}</div></div></div><p class="contribution-scroll-hint">左右滑动查看全年</p><div class="contribution-legend"><span>少</span>${[0,1,2,3,4].map(n => `<i class="contribution-day level-${n}"></i>`).join('')}<span>多</span></div></section>`;
+    return `<section class="contribution-panel glass"><div class="contribution-header"><div><div class="eyebrow"><span></span> BLOG ACTIVITY</div><h2>博客贡献度</h2><p>记录每一次内容的发布与更新</p></div><div class="contribution-summary"><div class="contribution-year"><button type="button" data-year-step="-1" aria-label="查看上一年"${year <= contributionFirstYear ? ' disabled' : ''}>‹</button><span class="contribution-year-label" tabindex="-1">${year} 年</span><button type="button" data-year-step="1" aria-label="查看下一年"${isCurrentYear ? ' disabled' : ''}>›</button></div><span class="active-days">${active} 个活跃日</span></div></div><div class="contribution-scroll" tabindex="0" aria-label="左右滚动查看 ${year} 年全年贡献度"><div class="contribution-inner"><div class="contribution-months">${labels.join('')}</div><div class="contribution-grid" aria-label="${year} 年博客贡献度">${days.join('')}</div></div></div><p class="contribution-scroll-hint">左右滑动查看全年</p><div class="contribution-legend"><span>少</span>${[0,1,2,3,4].map(n => `<i class="contribution-day level-${n}"></i>`).join('')}<span>多</span></div></section>`;
   }
   function home() {
     const profile = data.profile || {}, settings = data.settings || {};
@@ -92,7 +93,7 @@
       const button = event.target.closest('[data-year-step]');
       if (!button || button.disabled) return;
       const step = Number(button.dataset.yearStep), year = contributionYear + step;
-      if (year < 1900 || year > new Date().getFullYear()) return;
+      if (year < contributionFirstYear || year > Math.max(contributionFirstYear, new Date().getFullYear())) return;
       contributionYear = year;
       const container = app.querySelector('.home-activity');
       container.innerHTML = contributionPanel(year);
@@ -137,11 +138,11 @@
   }
   function albumsPage() {
     const albums = Array.isArray(data.albums) ? data.albums : [];
-    app.innerHTML = `<section class="inner-page photo-wall">${heading('PHOTOGRAPHIC NOTES','光影集','人们无法判断一个瞬间的价值<br>直到它成为回忆')}<label class="search"><span>⌕</span><input type="search" placeholder="搜索相册名称或介绍…" aria-label="搜索相册"></label><div class="album-grid"></div><p class="empty album-empty" hidden>没有找到相册。</p></section>`;
+    app.innerHTML = `<section class="inner-page photo-wall">${heading('PHOTOGRAPHIC NOTES','光影集','人们无法判断一个瞬间的价值<br>直到它成为回忆')}<div class="album-grid"></div><p class="empty album-empty" hidden>没有找到相册。</p></section>`;
     const grid = app.querySelector('.album-grid'), empty = app.querySelector('.album-empty');
-    const update = () => { const query = app.querySelector('input').value.trim().toLowerCase(); const matches = albums.map((album,index) => ({album,index})).filter(({album}) => `${album.title || ''} ${album.description || ''}`.toLowerCase().includes(query));
+    const update = () => { const matches = albums.map((album,index) => ({album,index}));
       grid.innerHTML = matches.map(({album,index}) => { const images = Array.isArray(album.images) ? album.images.filter(imageUrl) : []; const cover = imageUrl(images[0]); return `<a class="album-card" href="#album/${index}"><div class="album-stack"><div class="album-sheet album-sheet-back"></div><div class="album-sheet album-sheet-mid"></div>${cover ? `<img class="album-photo" src="${cover}" alt="" loading="lazy">` : '<div class="album-photo album-placeholder">✳</div>'}</div><div class="album-caption"><h2>${esc(album.title)}</h2><span>${date(album.date)}</span><p>${esc(album.description || '')}</p><small>${images.length} 张照片</small></div></a>`; }).join(''); empty.hidden = matches.length > 0; empty.textContent = albums.length ? '没有找到相册。' : '还没有相册，点击编辑此页添加第一组照片。'; };
-    app.querySelector('input').addEventListener('input',update); update();
+    update();
   }
   function albumPage(index) {
     const album = (data.albums || [])[index];
@@ -320,7 +321,7 @@
   }
   startWallpaperBackground();
   const fireflies = document.createElement('div'); fireflies.className = 'night-fireflies'; fireflies.setAttribute('aria-hidden','true');
-  for (let i=0; i<24; i++) { const spark = document.createElement('i'); spark.style.left = `${(i * 47 + 7) % 97}%`; spark.style.top = `${(i * 67 + 11) % 94}%`; spark.style.setProperty('--spark-delay', `${-(i % 9)}s`); spark.style.setProperty('--spark-duration', `${5 + i % 5}s`); fireflies.append(spark); }
+  for (let i=0; i<24; i++) { const spark = document.createElement('i'); spark.style.left = `${(i * 47 + 7) % 97}%`; spark.style.top = `${(i * 67 + 11) % 94}%`; spark.style.setProperty('--spark-delay', `${-(i % 9)}s`); spark.style.setProperty('--spark-duration', `${3.5 + (i % 5) * 0.5}s`); fireflies.append(spark); }
   document.body.append(fireflies);
   // Decorative atmosphere never intercepts input or changes site content.
   const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');

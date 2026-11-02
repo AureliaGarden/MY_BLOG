@@ -151,3 +151,6 @@ body:not(.home-active) .topbar{border-bottom:1px solid rgba(112,142,128,.36)}bod
 
 /* 栏目标题上移，介绍文字居中置于标题下方。 */
 body:not(.home-active) .inner-page:not(.article-page){padding-top:12px}body:not(.home-active) .inner-page>.section-heading:has(>div>h2){row-gap:9px}body:not(.home-active) .inner-page>.section-heading:has(>div>h2) .eyebrow{grid-row:1}body:not(.home-active) .inner-page>.section-heading:has(>div>h2) h2{grid-row:1}body:not(.home-active) .inner-page>.section-heading:has(>div>h2)>p{grid-column:1 / -1;grid-row:2;justify-self:center;text-align:center;max-width:min(100%,600px)}body:not(.home-active) .inner-page>.section-heading:has(>div>h2)>p:empty{display:none}
+
+/* 搜索与贡献图：保持简洁，并区分建站前的日期。 */
+body:not(.home-active) .inner-page>.search{width:min(100%,480px);margin:24px auto 30px}body .home-activity .contribution-day.is-before-start{background:#d4d7d8;opacity:1}body.night-mode .home-activity .contribution-day.is-before-start{background:#626873;opacity:1}
