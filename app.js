@@ -74,7 +74,7 @@
     const profile = data.profile || {}, settings = data.settings || {};
     const avatar = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(profile.avatar || '') ? `<img src="${esc(profile.avatar)}" alt="个人头像">` : '✳';
     const wallpaper = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(settings.coverWallpaper || '') ? ` style="background-image:url('${settings.coverWallpaper}')"` : '';
-    const title = settings.coverQuote || '把喜欢的事，\n留在日子里。';
+    const title = settings.coverQuote || '我所热爱的，就是我的生活';
     const author = settings.coverAuthor || '— 写给每一个普通的日子';
     const tagsList = Array.isArray(profile.tags) ? profile.tags : [];
     const post = config.posts.find(item => postSection(item) === 'posts'), moment = (config.moments || [])[0], album = (data.albums || [])[0];
