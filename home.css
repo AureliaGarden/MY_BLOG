@@ -154,3 +154,6 @@ body:not(.home-active) .inner-page:not(.article-page){padding-top:12px}body:not(
 
 /* 搜索与贡献图：保持简洁，并区分建站前的日期。 */
 body:not(.home-active) .inner-page>.search{width:min(100%,480px);margin:24px auto 30px}body .home-activity .contribution-day.is-before-start{background:#d4d7d8;opacity:1}body.night-mode .home-activity .contribution-day.is-before-start{background:#626873;opacity:1}
+
+/* 首页内跳转按钮沿用原有文字链接的外观。 */
+.discover-jump{border:0;background:transparent;padding:0;text-align:left}.discover-jump:focus-visible{outline:2px solid currentColor;outline-offset:4px;border-radius:2px}
