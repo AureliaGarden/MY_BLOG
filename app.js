@@ -125,7 +125,15 @@
   }
   function momentsPage() {
     const moments = config.moments || [];
-    app.innerHTML = `<section class="inner-page">${heading('LITTLE MOMENTS','浮生记','日常发癫报复社会')}<div class="moment-grid">${moments.length ? moments.map(m => `<article class="moment-card glass"><div class="moment-card-header"><span class="moment-mark">✳</span><time>${date(m.date)}</time></div><p>${esc(m.text).replace(/\n/g,'<br>')}</p>${Array.isArray(m.images) && m.images.some(imageUrl) ? `<div class="moment-images ${m.images.length === 1 ? 'single' : ''}">${m.images.filter(imageUrl).map((src,i) => `<a href="${imageUrl(src)}" target="_blank" rel="noopener noreferrer"><img src="${imageUrl(src)}" alt="动态图片 ${i+1}" loading="lazy"></a>`).join('')}</div>` : ''}<div class="card-tags">${(m.tags || []).map(t => `<span># ${esc(t)}</span>`).join('')}</div></article>`).join('') : '<p class="empty">还没有动态，期待第一条记录。</p>'}</div></section>`;
+    app.innerHTML = `<section class="inner-page">${heading('LITTLE MOMENTS','浮生记','日常发癫报复社会')}<label class="search"><span>⌕</span><input type="search" placeholder="搜索随笔内容或标签…" aria-label="搜索随笔"></label><div class="moment-grid"></div><p class="empty moment-empty" hidden></p></section>`;
+    const input = app.querySelector('input'), grid = app.querySelector('.moment-grid'), empty = app.querySelector('.moment-empty');
+    function update() {
+      const query = input.value.trim().toLowerCase();
+      const matches = moments.filter(m => [m.text,...(m.tags || [])].some(value => String(value || '').toLowerCase().includes(query)));
+      grid.innerHTML = matches.map(m => `<article class="moment-card glass"><div class="moment-card-header"><span class="moment-mark">✳</span><time>${date(m.date)}</time></div><p>${esc(m.text).replace(/\n/g,'<br>')}</p>${Array.isArray(m.images) && m.images.some(imageUrl) ? `<div class="moment-images ${m.images.length === 1 ? 'single' : ''}">${m.images.filter(imageUrl).map((src,i) => `<a href="${imageUrl(src)}" target="_blank" rel="noopener noreferrer"><img src="${imageUrl(src)}" alt="动态图片 ${i+1}" loading="lazy"></a>`).join('')}</div>` : ''}<div class="card-tags">${(m.tags || []).map(t => `<span># ${esc(t)}</span>`).join('')}</div></article>`).join('');
+      empty.hidden = matches.length > 0; empty.textContent = moments.length ? '没有找到匹配的随笔。' : '还没有动态，期待第一条记录。';
+    }
+    input.addEventListener('input', update); update();
   }
   function albumsPage() {
     const albums = Array.isArray(data.albums) ? data.albums : [];
@@ -143,7 +151,15 @@
   }
   function projectsPage() {
     const projects = config.projects || [];
-    app.innerHTML = `<section class="inner-page">${heading('A COLLECTION OF THINGS','造物集','把灵感写成现实，<br>让想法慢慢成形。')}<div class="project-grid">${projects.length ? projects.map(p => { const url = safeUrl(p.url); const content = `<div class="project-top"><span class="project-icon">✺</span><span>${url ? '↗' : '✧'}</span></div><span class="category">${esc(p.category)}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p>`; return url ? `<a class="project-card glass" href="${url}" target="_blank" rel="noopener noreferrer">${content}</a>` : `<article class="project-card glass">${content}</article>`; }).join('') : '<p class="empty">还没有收藏，慢慢添加吧。</p>'}</div></section>`;
+    app.innerHTML = `<section class="inner-page">${heading('A COLLECTION OF THINGS','造物集','把灵感写成现实，<br>让想法慢慢成形。')}<label class="search"><span>⌕</span><input type="search" placeholder="搜索项目名称、分类或介绍…" aria-label="搜索项目"></label><div class="project-grid"></div><p class="empty project-empty" hidden></p></section>`;
+    const input = app.querySelector('input'), grid = app.querySelector('.project-grid'), empty = app.querySelector('.project-empty');
+    function update() {
+      const query = input.value.trim().toLowerCase();
+      const matches = projects.filter(p => [p.title,p.category,p.description].some(value => String(value || '').toLowerCase().includes(query)));
+      grid.innerHTML = matches.map(p => { const url = safeUrl(p.url); const content = `<div class="project-top"><span class="project-icon">✺</span><span>${url ? '↗' : '✧'}</span></div><span class="category">${esc(p.category)}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p>`; return url ? `<a class="project-card glass" href="${url}" target="_blank" rel="noopener noreferrer">${content}</a>` : `<article class="project-card glass">${content}</article>`; }).join('');
+      empty.hidden = matches.length > 0; empty.textContent = projects.length ? '没有找到匹配的项目。' : '还没有收藏，慢慢添加吧。';
+    }
+    input.addEventListener('input', update); update();
   }
   function about() {
     const profile = data.profile || {}, settings = data.settings || {};
