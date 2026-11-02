@@ -48,7 +48,7 @@ function postBody(post) {
   return fs.readFileSync(path.join(root,post.file),'utf8');
 }
 function reply(res, status, body, type = 'application/json; charset=utf-8') { res.writeHead(status, {'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}); res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body)); }
-const files = {'/':'index.html','/index.html':'index.html','/style.css':'style.css','/home.css':'home.css','/app.js':'app.js','/config.js':'config.js','/blog-data.js':'blog-data.js','/editor':'editor.html','/editor.html':'editor.html','/editor.js':'editor.js','/editor.css':'editor.css','/assets/wallpaper.png':'assets/wallpaper.png','/personal/character.png':'personal/character.png','/personal/character-mask.png':'personal/character-mask.png'};
+const files = {'/':'index.html','/index.html':'index.html','/style.css':'style.css','/home.css':'home.css','/app.js':'app.js','/config.js':'config.js','/blog-data.js':'blog-data.js','/editor':'editor.html','/editor.html':'editor.html','/editor.js':'editor.js','/editor.css':'editor.css','/assets/wallpaper.png':'assets/wallpaper.png','/assets/uptime-mascot.png':'assets/uptime-mascot.png','/personal/character.png':'personal/character.png','/personal/character-mask.png':'personal/character-mask.png'};
 http.createServer((req,res) => {
   try {
     const pathname = new URL(req.url,origin).pathname;
