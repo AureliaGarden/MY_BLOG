@@ -2,7 +2,7 @@
 window.BLOG = {
   name: "Aurelia",
   title: "留住生活的微光",
-  description: "记录生活、分享想法，也收藏那些闪闪发光的瞬间。",
+  description: "把学到的、想到的，还有偶然喜欢上的事，慢慢收进这里。\n愿你路过时，也能找到一点属于自己的光。",
   about: "你好，我是 Aurelia。这里是我的个人空间，记录生活中的点滴、学习中的发现，以及一路上的奇思妙想。",
   github: "https://github.com/AureliaGarden",
   interests: ["阅读", "生活记录", "探索新事物"],
