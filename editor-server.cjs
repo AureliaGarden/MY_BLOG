@@ -87,8 +87,10 @@ http.createServer((req,res) => {
           const title = text(payload.title,150), content = text(payload.body,200000); if (!title || !content) throw new Error('请填写标题和文章内容');
           const index = data.posts.findIndex(p => p.slug === slug), old = data.posts[index];
           const cover = imagePath(payload.cover || '');
-          const next = {slug,title,date:old?.date || nowMinute(),category:text(payload.category,40) || '随笔',tags:list(payload.tags),excerpt:text(payload.excerpt,300),reading:old?.reading || '阅读文章',body:content,cover};
-          const comparable = old && {slug:old.slug,title:old.title,date:old.date,category:old.category,tags:old.tags || [],excerpt:old.excerpt,reading:old.reading || '阅读文章',body:postBody(old).trim(),cover:old.cover || ''};
+          const section = payload.section === undefined ? (old?.section === 'talk' ? 'talk' : 'posts') : payload.section;
+          if (!['posts','talk'].includes(section)) throw new Error('文章栏目无效');
+          const next = {slug,title,date:old?.date || nowMinute(),category:text(payload.category,40) || '随笔',tags:list(payload.tags),excerpt:text(payload.excerpt,300),reading:old?.reading || '阅读文章',body:content,cover,section};
+          const comparable = old && {slug:old.slug,title:old.title,date:old.date,category:old.category,tags:old.tags || [],excerpt:old.excerpt,reading:old.reading || '阅读文章',body:postBody(old).trim(),cover:old.cover || '',section:old.section === 'talk' ? 'talk' : 'posts'};
           if (JSON.stringify(next) !== JSON.stringify(comparable)) { if (index < 0) data.posts.unshift(next); else data.posts[index] = next; data.activity[today()] = (data.activity[today()] || 0) + 1; }
         } else if (payload.kind === 'moment') {
           if (!Array.isArray(data.moments)) data.moments = initial.moments;
