@@ -106,7 +106,7 @@
     const sectionPosts = config.posts.filter(p => postSection(p) === section);
     const categories = [...new Set(sectionPosts.map(p => p.category).filter(Boolean))];
     const allTags = [...new Set(sectionPosts.flatMap(tags))];
-    app.innerHTML = `<section class="inner-page">${section === 'talk' ? heading('OPEN THOUGHTS','世间谈','态度是心的面具') : heading('THE ARCHIVE','研习录',`杂学旁收的废物<br><span class="section-total">共 ${sectionPosts.length} 篇研习目录</span>`)}<label class="search"><span>⌕</span><input type="search" placeholder="搜索标题、分类、标签或摘要…" aria-label="搜索文章"></label><div class="filter-row"><span>分类</span><div id="category-filters" class="filter-buttons"></div></div><div class="filter-row"><span>标签</span><div id="tag-filters" class="filter-buttons"></div></div><p class="result-count" aria-live="polite"></p><div class="post-timeline" id="post-list"></div><p class="empty" hidden>没有找到相关文章，试试其他关键词或筛选条件。</p></section>`;
+    app.innerHTML = `<section class="inner-page">${section === 'talk' ? heading('OPEN THOUGHTS','世间谈','态度是心的面具') : heading('THE ARCHIVE','研习录',`杂学旁收的废物<br><span class="section-total">共 ${sectionPosts.length} 篇研习目录</span>`)}<label class="search"><span>⌕</span><input type="search" placeholder="${section === 'talk' ? '在纷纷话语间，寻一种声音…' : '在字里行间，寻找一点灵感…'}" aria-label="${section === 'talk' ? '搜索闲谈' : '搜索文章'}"></label><div class="filter-row"><span>分类</span><div id="category-filters" class="filter-buttons"></div></div><div class="filter-row"><span>标签</span><div id="tag-filters" class="filter-buttons"></div></div><p class="result-count" aria-live="polite"></p><div class="post-timeline" id="post-list"></div><p class="empty" hidden>没有找到相关文章，试试其他关键词或筛选条件。</p></section>`;
     let category = '', tag = '';
     const input = app.querySelector('input');
     function update() {
@@ -126,7 +126,7 @@
   }
   function momentsPage() {
     const moments = config.moments || [];
-    app.innerHTML = `<section class="inner-page">${heading('LITTLE MOMENTS','浮生记','日常发癫报复社会')}<label class="search"><span>⌕</span><input type="search" placeholder="搜索随笔内容或标签…" aria-label="搜索随笔"></label><div class="moment-grid"></div><p class="empty moment-empty" hidden></p></section>`;
+    app.innerHTML = `<section class="inner-page">${heading('LITTLE MOMENTS','浮生记','日常发癫报复社会')}<label class="search"><span>⌕</span><input type="search" placeholder="翻一翻，那些零碎的日常…" aria-label="搜索随笔"></label><div class="moment-grid"></div><p class="empty moment-empty" hidden></p></section>`;
     const input = app.querySelector('input'), grid = app.querySelector('.moment-grid'), empty = app.querySelector('.moment-empty');
     function update() {
       const query = input.value.trim().toLowerCase();
@@ -152,7 +152,7 @@
   }
   function projectsPage() {
     const projects = config.projects || [];
-    app.innerHTML = `<section class="inner-page">${heading('A COLLECTION OF THINGS','造物集','把灵感写成现实，<br>让想法慢慢成形。')}<label class="search"><span>⌕</span><input type="search" placeholder="搜索项目名称、分类或介绍…" aria-label="搜索项目"></label><div class="project-grid"></div><p class="empty project-empty" hidden></p></section>`;
+    app.innerHTML = `<section class="inner-page">${heading('A COLLECTION OF THINGS','造物集','把灵感写成现实，<br>让想法慢慢成形。')}<label class="search"><span>⌕</span><input type="search" placeholder="循着灵感，找一件小作品…" aria-label="搜索项目"></label><div class="project-grid"></div><p class="empty project-empty" hidden></p></section>`;
     const input = app.querySelector('input'), grid = app.querySelector('.project-grid'), empty = app.querySelector('.project-empty');
     function update() {
       const query = input.value.trim().toLowerCase();
