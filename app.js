@@ -44,7 +44,7 @@
     const avatar = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(profile.avatar || '') ? `<img src="${esc(profile.avatar)}" alt="个人头像">` : '<span aria-hidden="true">✳</span>';
     return `<section class="profile-panel glass"><div class="profile-avatar">${avatar}</div><div class="profile-copy"><div class="eyebrow"><span></span> MY PROFILE</div><h2>${esc(profile.name || '你的名字')}</h2><p>${esc(profile.signature || '个性签名，留给以后的自己。')}</p><div class="profile-tags">${(profile.tags || []).map(t => `<span>${esc(t)}</span>`).join('') || '<span class="tag-empty">你的标签</span>'}</div></div></section>`;
   }
-  const contributionStart = '2026-11-30', contributionFirstYear = 2026;
+  const contributionStart = '2026-10-30', contributionFirstYear = 2026;
   let contributionYear = Math.max(contributionFirstYear, new Date().getFullYear());
   function contributionPanel(year = contributionYear) {
     const activity = data.activity || {};
