@@ -35,6 +35,17 @@
     if (uploading) return; uploading = true; const buttons = document.querySelectorAll('button[type=submit]'); buttons.forEach(button => button.disabled = true); message('正在添加图片…');
     try { for (const file of input.files) await callback(await upload(file)); message('图片已添加，请保存内容。'); } catch(error) { message(error.message,true); } finally { input.value = ''; uploading = false; buttons.forEach(button => button.disabled = false); }
   }
+  const postFormatTools = document.querySelector('.post-format-tools');
+  postFormatTools.addEventListener('mousedown', event => { if (event.target.closest('button')) event.preventDefault(); });
+  postFormatTools.addEventListener('click', event => {
+    const button = event.target.closest('button[data-post-format]'); if (!button) return;
+    const field = posts.elements.body, position = field.selectionStart;
+    const start = position === 0 ? 0 : field.value.lastIndexOf('\n', position - 1) + 1;
+    const endAt = field.value.indexOf('\n', position), end = endAt < 0 ? field.value.length : endAt;
+    const line = field.value.slice(start, end).replace(/^#{1,3}\s+/, '');
+    const level = Number(button.dataset.postFormat), prefix = level ? '#'.repeat(level) + ' ' : '';
+    field.setRangeText(prefix + line, start, end, 'end'); field.focus();
+  });
   byId('post-cover-file').addEventListener('change', e => uploadFiles(e.target, async url => { postCover = url; imagePreviews(); }));
   byId('remove-post-cover').addEventListener('click', () => { postCover = ''; imagePreviews(); });
   byId('post-image-file').addEventListener('change', e => { const field = posts.elements.body; let position = field.selectionStart; uploadFiles(e.target, async url => { const value = `\n![文章图片](${url})\n`; field.setRangeText(value, position, position, 'end'); position += value.length; }); });
