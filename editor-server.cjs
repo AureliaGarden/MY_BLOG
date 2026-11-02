@@ -34,6 +34,11 @@ function fullData() {
 }
 function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function nowMinute() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function recordUpdate(data, entry) {
+  if (data.activityLog == null) data.activityLog = [];
+  if (!Array.isArray(data.activityLog)) throw new Error('更新日志格式无效，请先检查本地数据');
+  data.activityLog.unshift({id:crypto.randomUUID(),at:nowMinute(),...entry});
+}
 function text(value, max = 5000) { if (typeof value !== 'string' || value.length > max) throw new Error('输入内容无效或过长'); return value.trim(); }
 function list(value) { if (!Array.isArray(value) || value.length > 30) throw new Error('标签格式无效'); return value.map(v => text(v, 40)).filter(Boolean); }
 function imagePath(value) { if (typeof value !== 'string' || (value && !/^\/personal\/uploads\/[a-f0-9-]{36}\.(png|jpg|webp|gif)$/.test(value))) throw new Error('图片路径无效'); return value; }
@@ -91,24 +96,26 @@ http.createServer((req,res) => {
           if (!['posts','talk'].includes(section)) throw new Error('文章栏目无效');
           const next = {slug,title,date:old?.date || nowMinute(),category:text(payload.category,40) || '随笔',tags:list(payload.tags),excerpt:text(payload.excerpt,300),reading:old?.reading || '阅读文章',body:content,cover,section};
           const comparable = old && {slug:old.slug,title:old.title,date:old.date,category:old.category,tags:old.tags || [],excerpt:old.excerpt,reading:old.reading || '阅读文章',body:postBody(old).trim(),cover:old.cover || '',section:old.section === 'talk' ? 'talk' : 'posts'};
-          if (JSON.stringify(next) !== JSON.stringify(comparable)) { if (index < 0) data.posts.unshift(next); else data.posts[index] = next; data.activity[today()] = (data.activity[today()] || 0) + 1; }
+          if (JSON.stringify(next) !== JSON.stringify(comparable)) { if (index < 0) data.posts.unshift(next); else data.posts[index] = next; data.activity[today()] = (data.activity[today()] || 0) + 1; recordUpdate(data,{type:'post',action:index < 0 ? 'create' : 'update',slug,title,section}); }
         } else if (payload.kind === 'moment') {
           if (!Array.isArray(data.moments)) data.moments = initial.moments;
           const content = text(payload.text,5000); if (!content) throw new Error('请填写动态内容');
           const index = Number(payload.index); if (!Number.isInteger(index) || index < -1 || index >= data.moments.length) throw new Error('动态不存在');
           const old = index < 0 ? null : data.moments[index]; const images = payload.images || []; if (!Array.isArray(images) || images.length > 9) throw new Error('一条动态最多添加 9 张图片'); const next = {date:old?.date || nowMinute(),text:content,tags:list(payload.tags),images:images.map(imagePath)};
-          const comparable = old && {...old, images:old.images || []};
-          if (JSON.stringify(next) !== JSON.stringify(comparable)) { if (index < 0) data.moments.unshift(next); else data.moments[index] = next; data.activity[today()] = (data.activity[today()] || 0) + 1; }
+          const comparable = old && {date:old.date,text:old.text,tags:old.tags || [],images:old.images || []};
+          if (JSON.stringify(next) !== JSON.stringify(comparable)) { next.id = old?.id || crypto.randomUUID(); if (index < 0) data.moments.unshift(next); else data.moments[index] = next; data.activity[today()] = (data.activity[today()] || 0) + 1; recordUpdate(data,{type:'moment',action:index < 0 ? 'create' : 'update',momentId:next.id,title:content.slice(0,100)}); }
         } else if (payload.kind === 'delete-post') {
           if (!Array.isArray(data.posts)) data.posts = initial.posts;
           const slug = text(payload.slug,80), index = data.posts.findIndex(p => p.slug === slug);
           if (index < 0) throw new Error('文章不存在，请刷新后重试');
-          data.posts.splice(index,1);
+          const removed = data.posts[index]; data.posts.splice(index,1);
+          recordUpdate(data,{type:'post',action:'delete',slug,title:removed.title,section:removed.section === 'talk' ? 'talk' : 'posts'});
         } else if (payload.kind === 'delete-moment') {
           if (!Array.isArray(data.moments)) data.moments = initial.moments;
           const index = Number(payload.index), old = data.moments[index];
           if (!Number.isInteger(index) || index < 0 || !old || old.date !== payload.date || old.text !== payload.text) throw new Error('动态已变化或不存在，请刷新后重试');
           data.moments.splice(index,1);
+          recordUpdate(data,{type:'moment',action:'delete',momentId:old.id || '',title:String(old.text || '').slice(0,100)});
         } else if (payload.kind === 'album') {
           if (!Array.isArray(data.albums)) data.albums = [];
           const index = Number(payload.index);

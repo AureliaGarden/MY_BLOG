@@ -70,6 +70,43 @@
     const isCurrentYear = year >= today.getFullYear();
     return `<section class="contribution-panel glass"><div class="contribution-header"><div><div class="eyebrow"><span></span> BLOG ACTIVITY</div><h2>博客贡献度</h2><p>记录每一次内容的发布与更新</p></div><div class="contribution-summary"><div class="contribution-year"><button type="button" data-year-step="-1" aria-label="查看上一年"${year <= contributionFirstYear ? ' disabled' : ''}>‹</button><span class="contribution-year-label" tabindex="-1">${year} 年</span><button type="button" data-year-step="1" aria-label="查看下一年"${isCurrentYear ? ' disabled' : ''}>›</button></div><span class="active-days">${active} 个活跃日</span></div></div><div class="contribution-scroll" tabindex="0" aria-label="左右滚动查看 ${year} 年全年贡献度"><div class="contribution-inner"><div class="contribution-months">${labels.join('')}</div><div class="contribution-grid" aria-label="${year} 年博客贡献度">${days.join('')}</div></div></div><p class="contribution-scroll-hint">左右滑动查看全年</p><div class="contribution-legend"><span>少</span>${[0,1,2,3,4].map(n => `<i class="contribution-day level-${n}"></i>`).join('')}<span>多</span></div></section>`;
   }
+  function bindContribution(container) {
+    container.addEventListener('click', event => {
+      const button = event.target.closest('[data-year-step]');
+      if (!button || button.disabled) return;
+      const step = Number(button.dataset.yearStep), year = contributionYear + step;
+      if (year < contributionFirstYear || year > Math.max(contributionFirstYear, new Date().getFullYear())) return;
+      contributionYear = year; container.innerHTML = contributionPanel(year);
+      const sameButton = container.querySelector(`[data-year-step="${step}"]`);
+      if (sameButton && !sameButton.disabled) sameButton.focus();
+      else container.querySelector('.contribution-year-label').focus();
+    });
+  }
+  let updatePage = 1;
+  function updateEntries() {
+    const recorded = Array.isArray(data.activityLog) ? data.activityLog.filter(e => e && typeof e === 'object') : [];
+    const createdPosts = new Set(recorded.filter(e => e.type === 'post' && e.action === 'create').map(e => e.slug));
+    const createdMoments = new Set(recorded.filter(e => e.type === 'moment' && e.action === 'create' && e.momentId).map(e => e.momentId));
+    const oldPosts = (config.posts || []).filter(p => p && !createdPosts.has(p.slug)).map(p => ({type:'post',action:'existing',at:p.date || '',slug:p.slug,title:p.title,section:postSection(p)}));
+    const oldMoments = (config.moments || []).filter(m => m && (!m.id || !createdMoments.has(m.id))).map(m => ({type:'moment',action:'existing',at:m.date || '',title:String(m.text || '').slice(0,100)}));
+    return [...recorded, ...oldPosts, ...oldMoments].sort((a,b) => String(b.at || '').localeCompare(String(a.at || '')));
+  }
+  function renderUpdateLog() {
+    const root = app.querySelector('.updates-content'); if (!root) return;
+    const entries = updateEntries(), totalPages = Math.max(1,Math.ceil(entries.length / 10));
+    updatePage = Math.min(Math.max(1, updatePage), totalPages);
+    const profile = data.profile || {}, name = profile.name || config.name;
+    const avatar = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(profile.avatar || '') ? `<img src="${esc(profile.avatar)}" alt="">` : '<span aria-hidden="true">✳</span>';
+    const rows = entries.slice((updatePage - 1) * 10, updatePage * 10).map(entry => {
+      const kind = entry.type === 'moment' ? '浮生记' : entry.section === 'talk' ? '世间谈' : '研习录';
+      const action = ({create:'发布了',update:'更新了',delete:'删除了',existing:'已有记录 ·'})[entry.action] || '记录了';
+      const title = esc(entry.title || (entry.type === 'moment' ? '一则随笔' : '未命名'));
+      const exists = entry.type === 'post' && entry.action !== 'delete' && (config.posts || []).some(p => p.slug === entry.slug);
+      const text = exists ? `<a href="#post/${encodeURIComponent(entry.slug)}">${title}</a>` : entry.type === 'moment' && entry.action !== 'delete' ? `<a href="#moments">${title}</a>` : `<span>${title}</span>`;
+      return `<li class="update-row"><span class="update-dot" aria-hidden="true"></span><span class="update-avatar">${avatar}</span><div class="update-text"><span class="update-actor">${esc(name)}</span><span class="update-action">${action} ${kind}</span><span class="update-title">${text}</span></div><time>${entry.at ? date(entry.at) : '未记录日期'}</time></li>`;
+    }).join('');
+    root.innerHTML = `${entries.length ? `<ol class="update-list">${rows}</ol>` : '<p class="update-empty">还没有更新记录，慢慢写下第一篇吧。</p>'}<nav class="update-pagination" aria-label="更新日志分页"><button type="button" data-update-step="-1"${updatePage <= 1 ? ' disabled' : ''}>← 上一页</button><span aria-live="polite">第 ${updatePage} / ${totalPages} 页</span><button type="button" data-update-step="1"${updatePage >= totalPages ? ' disabled' : ''}>下一页 →</button></nav>`;
+  }
   function home() {
     const profile = data.profile || {}, settings = data.settings || {};
     const avatar = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(profile.avatar || '') ? `<img src="${esc(profile.avatar)}" alt="个人头像">` : '✳';
@@ -83,25 +120,14 @@
       {type:'albums', href:'#albums', label:'光影集', heading:album?.title || '收藏眼前的风景', text:album?.description || '把喜欢的画面留在这里', image:imageUrl(album?.images?.[0])},
       {type:'moments', href:'#moments', label:'浮生记', heading:moment?.text || '记录此刻的心情', text:moment ? date(moment.date) : '一些生活里的小片刻', image:imageUrl(moment?.images?.find(imageUrl))}
     ].map(item => `<a class="home-window home-window--${item.type}${item.image ? ' has-image' : ''}" href="${item.href}">${item.image ? `<img src="${item.image}" alt="" loading="lazy">` : ''}<div class="home-window-copy"><span>${item.label}</span><h3>${esc(item.heading)}</h3><p>${esc(item.text)}</p><small>进入${item.label} ↗</small></div></a>`).join('');
-    app.innerHTML = `<div class="chosen-home"><section class="cover" id="cover"><div class="cover-picture"${wallpaper}></div><div class="cover-shade"></div><header class="nav"><a class="wordmark" href="#home">${esc(config.name)}<span>’</span>s space<small>PERSONAL JOURNAL</small></a><nav aria-label="首页导航"><a href="#home" class="nav-current">首页</a><a href="#posts">研习录</a><a href="#moments">浮生记</a><a href="#talk">世间谈</a><a href="#projects">造物集</a><a href="#albums">光影集</a><a href="#about">关于</a></nav><span class="nav-end">✳</span></header><div class="cover-center"><div class="cover-kicker"><span></span> A LITTLE WORLD OF MY OWN <span></span></div><h1>${esc(title)}</h1><p>${esc(author)}</p><div class="cover-mark">✳</div></div><div class="cover-bottom"><span>01 / A PLACE TO BEGIN</span><button class="scroll-down" type="button"><span>向下探索</span><b>⌄</b></button><span>COLLECT THE LITTLE THINGS</span></div></section><main id="home-content" class="home"><div class="home-inner"><div class="section-overline"><span>✳</span><span>WELCOME TO MY LITTLE SPACE</span><span class="overline-line"></span><span>01 / HOME</span></div><section class="intro"><div class="intro-text"><div class="profile-line"><a class="profile-avatar profile-avatar-link" href="#about" aria-label="查看关于我">${avatar}</a><div><strong>${esc(profile.name || config.name)}</strong><small>YOUR PERSONAL SPACE</small></div></div><div class="small-label"><span></span> A NOTE FROM ME</div><h2>你好，<br>欢迎来到我的<span>小小世界。</span></h2>${String(config.description || '').split(/\r?\n/).filter(line => line.trim()).map(line => `<p>${esc(line)}</p>`).join('')}<div class="interest-tags">${tagsList.map(t=>`<span>${esc(t)}</span>`).join('')}</div><button class="text-link discover-jump" type="button">从最近的故事开始 <span>↗</span></button></div><div class="art-space"><div class="art-halo"></div><div class="art-frame"></div><img class="character" src="/personal/character.png" alt="首页角色" onerror="this.hidden=true"><div class="art-caption"><span>THE THINGS I LOVE</span><b>与你共享的<br>小小风景</b><i>✳</i></div><div class="art-number">FIG. 01 &nbsp; / &nbsp; A QUIET COMPANY</div></div></section><section class="home-discover"><div class="journal-heading"><div><div class="small-label"><span></span> A LITTLE WORLD</div><h2>在这里<span>慢慢发现</span></h2></div></div><div class="home-window-grid">${panels}<button class="home-theme" type="button" data-theme-toggle aria-pressed="false"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-name">夜间模式</span><small>切换光影氛围</small></button></div></section><section class="home-activity">${contributionPanel()}</section><section class="little-note"><span>✳</span><div><small>A LITTLE NOTE</small><p>谢谢你来到这里，愿我们都能认真生活，自由喜欢。</p></div><a href="#home" aria-label="返回顶部">↑</a></section><div class="home-footer"><span>© ${new Date().getFullYear()} ${esc(config.name)}’S SPACE</span><span>MADE WITH LITTLE MOMENTS ✳</span></div></div></main></div>`;
+    app.innerHTML = `<div class="chosen-home"><section class="cover" id="cover"><div class="cover-picture"${wallpaper}></div><div class="cover-shade"></div><header class="nav"><a class="wordmark" href="#home">${esc(config.name)}<span>’</span>s space<small>PERSONAL JOURNAL</small></a><nav aria-label="首页导航"><a href="#home" class="nav-current">首页</a><a href="#posts">研习录</a><a href="#moments">浮生记</a><a href="#talk">世间谈</a><a href="#projects">造物集</a><a href="#albums">光影集</a><a href="#about">关于</a></nav><span class="nav-end">✳</span></header><div class="cover-center"><div class="cover-kicker"><span></span> A LITTLE WORLD OF MY OWN <span></span></div><h1>${esc(title)}</h1><p>${esc(author)}</p><div class="cover-mark">✳</div></div><div class="cover-bottom"><span>01 / A PLACE TO BEGIN</span><button class="scroll-down" type="button"><span>向下探索</span><b>⌄</b></button><span>COLLECT THE LITTLE THINGS</span></div></section><main id="home-content" class="home"><div class="home-inner"><div class="section-overline"><span>✳</span><span>WELCOME TO MY LITTLE SPACE</span><span class="overline-line"></span><span>01 / HOME</span></div><section class="intro"><div class="intro-text"><div class="profile-line"><a class="profile-avatar profile-avatar-link" href="#about" aria-label="查看关于我">${avatar}</a><div><strong>${esc(profile.name || config.name)}</strong><small>YOUR PERSONAL SPACE</small></div></div><div class="small-label"><span></span> A NOTE FROM ME</div><h2>你好，<br>欢迎来到我的<span>小小世界。</span></h2>${String(config.description || '').split(/\r?\n/).filter(line => line.trim()).map(line => `<p>${esc(line)}</p>`).join('')}<div class="interest-tags">${tagsList.map(t=>`<span>${esc(t)}</span>`).join('')}</div><button class="text-link discover-jump" type="button">从最近的故事开始 <span>↗</span></button></div><div class="art-space"><div class="art-halo"></div><div class="art-frame"></div><img class="character" src="/personal/character.png" alt="首页角色" onerror="this.hidden=true"><div class="art-caption"><span>THE THINGS I LOVE</span><b>与你共享的<br>小小风景</b><i>✳</i></div><div class="art-number">FIG. 01 &nbsp; / &nbsp; A QUIET COMPANY</div></div></section><section class="home-discover"><div class="journal-heading"><div><div class="small-label"><span></span> A LITTLE WORLD</div><h2>在这里<span>慢慢发现</span></h2></div></div><div class="home-window-grid">${panels}<button class="home-theme" type="button" data-theme-toggle aria-pressed="false"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-name">夜间模式</span><small>切换光影氛围</small></button></div></section><section class="home-uptime" aria-label="网站运行时长"><div class="uptime-icon" aria-hidden="true">✳</div><div><span class="uptime-kicker">A LITTLE TIME TOGETHER</span><h2>陪伴时光</h2><p>愿每一次相遇，都能留下一点温柔。</p></div><div class="uptime-value"><span>稳定运行</span><strong>0 天 0 小时 0 分 0 秒</strong></div></section><section class="little-note"><span>✳</span><div><small>A LITTLE NOTE</small><p>谢谢你来到这里，愿我们都能认真生活，自由喜欢。</p></div><a href="#home" aria-label="返回顶部">↑</a></section><div class="home-footer"><span>© ${new Date().getFullYear()} ${esc(config.name)}’S SPACE</span><span>MADE WITH LITTLE MOMENTS ✳</span></div></div></main></div>`;
     applyTheme();
     app.querySelector('[data-theme-toggle]').addEventListener('click', () => { isNight = !isNight; try { localStorage.setItem('blog-theme', isNight ? 'night' : 'day'); } catch {} applyTheme(); });
     const character = app.querySelector('.character');
     fetch('/personal/character-mask.png').then(res => { if (res.ok && character.isConnected) character.classList.add('has-mask'); }).catch(() => {});
     app.querySelector('.scroll-down').addEventListener('click', () => document.getElementById('home-content').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}));
     app.querySelector('.discover-jump').addEventListener('click', () => app.querySelector('.home-discover').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'}));
-    app.querySelector('.home-activity').addEventListener('click', event => {
-      const button = event.target.closest('[data-year-step]');
-      if (!button || button.disabled) return;
-      const step = Number(button.dataset.yearStep), year = contributionYear + step;
-      if (year < contributionFirstYear || year > Math.max(contributionFirstYear, new Date().getFullYear())) return;
-      contributionYear = year;
-      const container = app.querySelector('.home-activity');
-      container.innerHTML = contributionPanel(year);
-      const sameButton = container.querySelector(`[data-year-step="${step}"]`);
-      if (sameButton && !sameButton.disabled) sameButton.focus();
-      else container.querySelector('.contribution-year-label').focus();
-    });
+
   }
   function postsPage(section = 'posts') {
     const sectionPosts = config.posts.filter(p => postSection(p) === section);
@@ -168,7 +194,14 @@
     const avatar = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(profile.avatar || '') ? `<img src="${esc(profile.avatar)}" alt="个人头像">` : '<span aria-hidden="true">✳</span>';
     const wallpaper = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(settings.coverWallpaper || '') ? ` style="background-image:url('${settings.coverWallpaper}')"` : '';
     const name = profile.name || config.name;
-    app.innerHTML = `<section class="inner-page about-page">${heading('A LITTLE ABOUT ME','关于我','')}<article class="about-profile glass"><div class="about-cover"${wallpaper}></div><div class="about-content"><div class="about-profile-avatar">${avatar}</div><div class="about-title"><p>HELLO, I'M ${esc(name)}</p></div><div class="about-introduction"><h2>个人简介</h2><p>${esc(config.about || '在这里写下关于自己的故事。').replace(/\n/g,'<br>')}</p>${profile.signature ? `<p class="about-signature">${esc(profile.signature)}</p>` : ''}<div class="interest-list">${(config.interests || []).map(i => `<span>${esc(i)}</span>`).join('')}</div></div><div class="about-timeline"><div class="eyebrow"><span></span> ALONG THE WAY</div><h2>一路走来</h2><div class="history-list">${(config.timeline || []).map(item => `<div class="history-item"><span>${esc(item.date)}</span><div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div></div>`).join('') || '<p class="empty">故事正在书写中。</p>'}</div></div><a class="button primary" href="${safeUrl(config.github) || '#home'}" target="_blank" rel="noopener noreferrer">访问我的 GitHub <span>↗</span></a></div></article></section>`;
+    app.innerHTML = `<section class="inner-page about-page">${heading('A LITTLE ABOUT ME','关于我','')}<article class="about-profile glass"><div class="about-cover"${wallpaper}></div><div class="about-content"><div class="about-profile-avatar">${avatar}</div><div class="about-title"><p>HELLO, I'M ${esc(name)}</p></div><div class="about-introduction"><h2>个人简介</h2><p>${esc(config.about || '在这里写下关于自己的故事。').replace(/\n/g,'<br>')}</p>${profile.signature ? `<p class="about-signature">${esc(profile.signature)}</p>` : ''}<div class="interest-list">${(config.interests || []).map(i => `<span>${esc(i)}</span>`).join('')}</div></div><div class="about-timeline"><div class="eyebrow"><span></span> ALONG THE WAY</div><h2>一路走来</h2><div class="history-list">${(config.timeline || []).map(item => `<div class="history-item"><span>${esc(item.date)}</span><div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div></div>`).join('') || '<p class="empty">故事正在书写中。</p>'}</div></div><a class="button primary" href="${safeUrl(config.github) || '#home'}" target="_blank" rel="noopener noreferrer">访问我的 GitHub <span>↗</span></a></div></article><section class="home-activity about-activity">${contributionPanel()}</section><section class="updates-section"><div class="updates-heading"><div><div class="eyebrow"><span></span> LITTLE UPDATES</div><h2>时光里的更新</h2></div><p>把每一次记录，留给慢慢走过的日子。</p></div><div class="updates-content"></div></section></section>`;
+    bindContribution(app.querySelector('.about-activity'));
+    renderUpdateLog();
+    app.querySelector('.updates-section').addEventListener('click', event => {
+      const button = event.target.closest('button[data-update-step]'); if (!button || button.disabled) return;
+      updatePage += Number(button.dataset.updateStep); renderUpdateLog();
+      app.querySelector('.updates-heading').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',block:'start'});
+    });
   }
   function markdown(source) {
     const headings = [];
