@@ -52,6 +52,7 @@ const files = {'/':'index.html','/index.html':'index.html','/style.css':'style.c
 http.createServer((req,res) => {
   try {
     const pathname = new URL(req.url,origin).pathname;
+    if (req.method === 'GET' && pathname === '/api/capabilities') return reply(res,200,{momentMood:true});
     if (req.method === 'GET' && pathname === '/api/data') { const data = fullData(); data.posts = data.posts.map(p => ({...p,body:postBody(p)})); return reply(res,200,data); }
     if (req.method === 'POST' && pathname === '/api/image') {
       if (req.headers.origin !== origin || req.headers['x-blog-editor'] !== '1' || !String(req.headers['content-type']).startsWith('application/json')) return reply(res,403,{error:'请求来源无效'});
@@ -102,7 +103,9 @@ http.createServer((req,res) => {
           const content = text(payload.text,5000); if (!content) throw new Error('请填写动态内容');
           const index = Number(payload.index); if (!Number.isInteger(index) || index < -1 || index >= data.moments.length) throw new Error('动态不存在');
           const old = index < 0 ? null : data.moments[index]; const images = payload.images || []; if (!Array.isArray(images) || images.length > 9) throw new Error('一条动态最多添加 9 张图片'); const next = {date:old?.date || nowMinute(),text:content,tags:list(payload.tags),images:images.map(imagePath)};
-          const comparable = old && {date:old.date,text:old.text,tags:old.tags || [],images:old.images || []};
+          const mood = payload.mood === undefined ? (old?.mood || '') : text(payload.mood,40);
+          if (mood) next.mood = mood;
+          const comparable = old && {date:old.date,text:old.text,tags:old.tags || [],images:old.images || [],...(old.mood ? {mood:old.mood} : {})};
           if (JSON.stringify(next) !== JSON.stringify(comparable)) { next.id = old?.id || crypto.randomUUID(); if (index < 0) data.moments.unshift(next); else data.moments[index] = next; data.activity[today()] = (data.activity[today()] || 0) + 1; recordUpdate(data,{type:'moment',action:index < 0 ? 'create' : 'update',momentId:next.id,title:content.slice(0,100)}); }
         } else if (payload.kind === 'delete-post') {
           if (!Array.isArray(data.posts)) data.posts = initial.posts;

@@ -168,3 +168,12 @@ body.night-mode .chosen-home .home-uptime{background:linear-gradient(120deg,#2b3
 
 /* 陪伴角色透明融入卡片背景。 */
 .chosen-home .uptime-icon{background:transparent;box-shadow:none;border-radius:0;overflow:visible}.chosen-home .uptime-icon img{filter:none}
+
+/* Theme change: two independent character cutouts, with a brief gentle veil. */
+.chosen-home .art-space .character{transition:opacity .38s ease}
+.chosen-home .art-space .character-night{opacity:0;pointer-events:none}
+body.night-mode .chosen-home .art-space.night-ready .character-day{opacity:0}
+body.night-mode .chosen-home .art-space.night-ready .character-night{opacity:1}
+body.theme-changing::after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;background:radial-gradient(circle at 50% 40%,rgba(221,218,245,.36),rgba(29,35,63,.45));animation:theme-veil .5s ease both}
+@keyframes theme-veil{0%,100%{opacity:0}45%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.chosen-home .art-space .character{transition:none}body.theme-changing::after{animation:none;display:none}}
