@@ -171,7 +171,7 @@ body.night-mode .chosen-home .home-uptime{background:linear-gradient(120deg,#2b3
 
 /* Theme change: two independent character cutouts, with a brief gentle veil. */
 .chosen-home .art-space .character{transition:opacity .38s ease}
-.chosen-home .art-space .character-night{opacity:0;pointer-events:none}
+.chosen-home .art-space .character-night{opacity:0;pointer-events:none;transform:translate(-.1%,.02%) rotate(.24deg) scale(.9993);transform-origin:center}
 body.night-mode .chosen-home .art-space.night-ready .character-day{opacity:0}
 body.night-mode .chosen-home .art-space.night-ready .character-night{opacity:1}
 body.theme-changing::after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;background:radial-gradient(circle at 50% 40%,rgba(221,218,245,.36),rgba(29,35,63,.45));animation:theme-veil .5s ease both}
