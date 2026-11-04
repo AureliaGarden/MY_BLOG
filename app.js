@@ -366,7 +366,7 @@
   }
   startWallpaperBackground();
   const fireflies = document.createElement('div'); fireflies.className = 'night-fireflies'; fireflies.setAttribute('aria-hidden','true');
-  for (let i=0; i<24; i++) { const spark = document.createElement('i'); spark.style.left = `${(i * 47 + 7) % 97}%`; spark.style.top = `${(i * 67 + 11) % 94}%`; spark.style.setProperty('--spark-delay', `${-(i % 9)}s`); spark.style.setProperty('--spark-duration', `${3.5 + (i % 5) * 0.5}s`); fireflies.append(spark); }
+  for (let i=0; i<24; i++) { const spark = document.createElement('i'); spark.style.left = `${(i * 47 + 7) % 97}%`; spark.style.top = `${(i * 67 + 11) % 94}%`; spark.style.setProperty('--spark-delay', `${-(i % 9)}s`); spark.style.setProperty('--spark-duration', `${2.4 + (i % 5) * 0.4}s`); fireflies.append(spark); }
   document.body.append(fireflies);
   // Decorative atmosphere never intercepts input or changes site content.
   const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
