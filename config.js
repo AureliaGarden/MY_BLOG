@@ -1,10 +1,10 @@
 // 在这里修改博客基本信息和文章目录。
 window.BLOG = {
-  name: "Aurelia",
+  name: "Camellia",
   title: "留住生活的微光",
   description: "把学到的、想到的，还有偶然喜欢上的事，慢慢收进这里。\n有时认真记下一点收获，有时只是为平凡的日子留下一句心情。\n这里没有赶路的钟声，只有慢慢生长的好奇，和想要珍藏的每一份热爱。\n愿你路过时，也能找到一点属于自己的光。",
-  about: "你好，我是 Aurelia。这里是我的个人空间，记录生活中的点滴、学习中的发现，以及一路上的奇思妙想。",
-  github: "https://github.com/AureliaGarden",
+  about: "你好，我是 Camellia。这里是我的个人空间，记录生活中的点滴、学习中的发现，以及一路上的奇思妙想。",
+  github: "https://github.com/Camellia-Garden",
   interests: ["阅读", "生活记录", "探索新事物"],
   timeline: [
     { date: "现在", title: "开始记录", text: "在这里慢慢收集生活与成长中的片刻。" }
@@ -13,7 +13,7 @@ window.BLOG = {
     { date: "2026-10-29", text: "新空间的第一条动态。以后可以在这里分享日常的小心情。", tags: ["日常", "示例"] }
   ],
   projects: [
-    { title: "我的博客", description: "一个正在慢慢成长的个人空间。", category: "项目", url: "https://github.com/AureliaGarden/MY_BLOG" },
+    { title: "我的博客", description: "一个正在慢慢成长的个人空间。", category: "项目", url: "https://github.com/Camellia-Garden/MY_BLOG" },
     { title: "收藏夹", description: "在这里添加喜欢的网站和有趣的发现。", category: "收藏", url: "" }
   ],
   // 待确定服务后再接入：不要在前端配置文件中填写密钥。

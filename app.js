@@ -287,7 +287,7 @@
           const latest = await res.json(); Object.assign(data, latest);
           for (const key of ['posts','moments','projects']) if (Array.isArray(data[key])) config[key] = data[key];
           for (const key of ['title','description','about','interests','timeline','github']) if (data.settings && Object.hasOwn(data.settings,key)) config[key] = data.settings[key];
-          document.querySelector('#brand-name').textContent = config.name || 'Aurelia';
+          document.querySelector('#brand-name').textContent = config.name || 'Camellia';
           document.querySelector('.github').href = safeUrl(config.github) || '#about';
           const y = window.scrollY; render(true); window.scrollTo({top:y,behavior:'instant'});
         } catch { alert('内容已保存，但页面更新失败，请手动刷新查看。'); }
@@ -403,7 +403,7 @@
     document.body.append(ripple);
     ripple.addEventListener('animationend', () => ripple.remove(), {once:true});
   });
-  document.querySelector('#year').textContent = new Date().getFullYear(); document.querySelector('#brand-name').textContent = config.name || 'Aurelia'; const githubLink = document.querySelector('.github'); githubLink.href = safeUrl(config.github) || '#about'; window.addEventListener('hashchange', () => {
+  document.querySelector('#year').textContent = new Date().getFullYear(); document.querySelector('#brand-name').textContent = config.name || 'Camellia'; const githubLink = document.querySelector('.github'); githubLink.href = safeUrl(config.github) || '#about'; window.addEventListener('hashchange', () => {
     render();
     if (app.getAnimations) app.getAnimations().forEach(animation => animation.cancel());
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches && app.animate) {

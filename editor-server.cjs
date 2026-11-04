@@ -119,13 +119,18 @@ http.createServer((req,res) => {
           if (!Number.isInteger(index) || index < 0 || !old || old.date !== payload.date || old.text !== payload.text) throw new Error('动态已变化或不存在，请刷新后重试');
           data.moments.splice(index,1);
           recordUpdate(data,{type:'moment',action:'delete',momentId:old.id || '',title:String(old.text || '').slice(0,100)});
+        } else if (payload.kind === 'delete-album') {
+          if (!Array.isArray(data.albums)) data.albums = [];
+          const index = Number(payload.index), old = data.albums[index];
+          if (!Number.isInteger(index) || index < 0 || !old || JSON.stringify(old) !== JSON.stringify(payload.album)) throw new Error('相册已变化或不存在，请刷新后重试');
+          data.albums.splice(index,1);
         } else if (payload.kind === 'album') {
           if (!Array.isArray(data.albums)) data.albums = [];
           const index = Number(payload.index);
           if (!Number.isInteger(index) || index < -1 || index >= data.albums.length) throw new Error('相册不存在');
           const title = text(payload.title,120), description = text(payload.description || '',500), images = payload.images;
           if (!title) throw new Error('请填写相册名称');
-          if (!Array.isArray(images) || images.length < 1 || images.length > 50) throw new Error('相册需要 1 至 50 张照片');
+          if (!Array.isArray(images) || images.length > 50) throw new Error('相册最多添加 50 张照片');
           const checked = images.map(imagePath); if (checked.some(x => !x)) throw new Error('照片路径无效');
           const old = index < 0 ? null : data.albums[index];
           const next = {title,description,date:old?.date || today(),images:checked};
