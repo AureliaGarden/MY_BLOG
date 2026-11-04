@@ -182,3 +182,10 @@ body.theme-changing::after{content:"";position:fixed;inset:0;z-index:9999;pointe
 .cover-picture-night{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;transition:opacity .5s ease}
 body.night-mode .cover.night-cover-ready .cover-picture-night{opacity:1}
 @media(prefers-reduced-motion:reduce){.cover-picture-night{transition:none}}
+
+/* Match the about cover to the current day or night scene. */
+.about-cover{position:relative;overflow:hidden}
+.about-cover-night{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 45%;opacity:0;pointer-events:none;transition:opacity .5s ease}
+body.night-mode .about-cover.night-cover-ready{filter:none}
+body.night-mode .about-cover.night-cover-ready .about-cover-night{opacity:1}
+@media(prefers-reduced-motion:reduce){.about-cover-night{transition:none}}
