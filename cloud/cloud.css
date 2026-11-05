@@ -1,0 +1,15 @@
+.comments-placeholder.comments-active {
+  display: block;
+}
+
+.comments-placeholder.comments-active h3 {
+  margin: 0 0 16px;
+}
+
+.comments-placeholder.comments-active .giscus {
+  width: 100%;
+}
+
+footer.footer a[href="/auth/login"] {
+  font-size: 11px;
+}

@@ -1,0 +1,23 @@
+{
+  "name": "camellia-blog",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-04",
+  "workers_dev": false,
+  "routes": [{"pattern":"camelliagarden.top","custom_domain":true}],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/auth/*", "/blog-data.js", "/personal/*", "/editor", "/editor.html"]
+  },
+  "d1_databases": [
+    {"binding": "DB", "database_name": "camellia-blog", "database_id": "7c0055fa-fe37-44fe-965b-18ac271887dc"}
+  ],
+  "r2_buckets": [
+    {"binding": "IMAGES", "bucket_name": "camellia-blog-images"}
+  ],
+  "vars": {
+    "PUBLIC_ORIGIN": "https://camelliagarden.top",
+    "GITHUB_CLIENT_ID": "Ov23lirZa77XWqiVLth7",
+    "ADMIN_GITHUB_ID": "226813393"
+  }
+}

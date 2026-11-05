@@ -1,0 +1,7 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import worker from './migration-r2.mjs';
+const key='personal/uploads/11111111-1111-1111-1111-111111111111.png';
+const digest=async data=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(data))).toString('hex');
+function bucket(){const objects=new Map();return {objects,async put(key,data,options){assert.equal(options.onlyIf.get('If-None-Match'),'*');if(objects.has(key))return null;objects.set(key,{data,contentType:options.httpMetadata.contentType});return {};},async get(key){const v=objects.get(key);return v?{size:v.data.byteLength,httpMetadata:{contentType:v.contentType},arrayBuffer:async()=>v.data}:null;}};}
+test('migration requires token, verifies bytes and refuses overwrites',async()=>{const store=bucket(),env={IMAGES:store,MIGRATION_TOKEN:'test-token'};const req=(body,token='test-token')=>new Request('http://localhost/'+key,{method:'PUT',headers:{Authorization:`Bearer ${token}`,'X-Content-SHA256':body==='abc'?'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad':'wrong'},body});assert.equal((await worker.fetch(req('abc','wrong'),env)).status,401);assert.equal((await worker.fetch(req('bad'),env)).status,400);const first=await worker.fetch(req('abc'),env);assert.equal(first.status,200);assert.deepEqual(await first.json(),{sha256:await digest('abc'),contentType:'image/png',size:3});assert.equal((await worker.fetch(req('abc'),env)).status,412);assert.equal(store.objects.size,1);});

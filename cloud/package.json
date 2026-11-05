@@ -1,0 +1,12 @@
+{
+  "name": "camellia-blog-cloud",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24"},
+  "scripts": {
+    "stage": "node generate-mutation.mjs && node stage-assets.mjs",
+    "test": "node --test *.test.mjs",
+    "migration:plan": "node prepare-migration.mjs --plan"
+  },
+  "devDependencies": {"wrangler": "4.157.0"}
+}
