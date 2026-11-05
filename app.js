@@ -4,7 +4,7 @@
   if (Array.isArray(data.posts)) config.posts = data.posts;
   if (Array.isArray(data.moments)) config.moments = data.moments;
   if (Array.isArray(data.projects)) config.projects = data.projects;
-  for (const key of ['title','description','about','interests','timeline','github']) if (data.settings && Object.hasOwn(data.settings,key)) config[key] = data.settings[key];
+  for (const key of ['title','description','about','interests','timeline','github']) if (data.settings && Object.prototype.hasOwnProperty.call(data.settings,key)) config[key] = data.settings[key];
   const app = document.querySelector('#app');
   let isNight = false;
   try { isNight = localStorage.getItem('blog-theme') === 'night'; } catch {}
@@ -16,7 +16,7 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const safeUrl = value => /^(https?:\/\/|mailto:)/i.test(value || '') ? esc(value) : '';
   const imageUrl = value => /^\/personal\/uploads\/[a-f0-9-]{36}\.(png|jpg|webp|gif)$/.test(value || '') ? esc(value) : '';
-  const date = value => esc(value).replaceAll('-', ' / ');
+  const date = value => esc(value).replace(/-/g, ' / ');
   const tags = post => post.tags || [];
   const postSection = post => post?.section === 'talk' ? 'talk' : 'posts';
   // 台词与署名来自用户提供的摘录；保留原文及原有署名。
@@ -311,7 +311,7 @@
           const res = await fetch('/api/data', {cache:'no-store'}); if (!res.ok) throw new Error('读取失败');
           const latest = await res.json(); Object.assign(data, latest);
           for (const key of ['posts','moments','projects']) if (Array.isArray(data[key])) config[key] = data[key];
-          for (const key of ['title','description','about','interests','timeline','github']) if (data.settings && Object.hasOwn(data.settings,key)) config[key] = data.settings[key];
+          for (const key of ['title','description','about','interests','timeline','github']) if (data.settings && Object.prototype.hasOwnProperty.call(data.settings,key)) config[key] = data.settings[key];
           document.querySelector('#brand-name').textContent = config.name || 'Camellia';
           document.querySelector('.github').href = safeUrl(config.github) || '#about';
           const y = window.scrollY; render(true); window.scrollTo({top:y,behavior:'instant'});

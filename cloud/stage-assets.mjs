@@ -20,12 +20,13 @@ function replaceOnce(text, from, to, name) {
 }
 const indexFile = path.join(target,'index.html');
 let index = (await readFile(indexFile, 'utf8')).replaceAll('\r\n', '\n');
-index = replaceOnce(index, '<script src="app.js"></script>', '<script type="module" src="app.js"></script>', 'app module');
+index = replaceOnce(index, '<script src="app.js"></script>', '<script src="app.js"></script>', 'app script');
 index = replaceOnce(index, '<link rel="stylesheet" href="home.css">', '<link rel="stylesheet" href="home.css">\n  <link rel="stylesheet" href="cloud.css">', 'cloud stylesheet');
 await writeFile(indexFile, index);
 const appFile = path.join(target,'app.js');
 let app = (await readFile(appFile, 'utf8')).replaceAll('\r\n', '\n');
-app = `import { createCommentScript } from './giscus-comments.mjs';\n${app}`;
+const comments = replaceOnce(await readFile(path.join(here, 'giscus-comments.mjs'), 'utf8'), 'export function createCommentScript', 'function createCommentScript', 'comment helper');
+app = replaceOnce(app, '(() => {\n  const config = window.BLOG;', `(() => {\n${comments}\n  const config = window.BLOG;`, 'comment helper injection');
 app = replaceOnce(app, '  const app = document.querySelector(\'#app\');', "  const app = document.querySelector('#app');\n  let cloudAdmin = false;", 'admin state');
 app = replaceOnce(app, "    if (location.hostname !== '127.0.0.1' || location.port !== '4173') return;", '    if (!cloudAdmin) return;', 'edit visibility');
 const commentAnchor = "    try {\n      let content = post.body;";
