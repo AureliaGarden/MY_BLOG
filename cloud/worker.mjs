@@ -68,6 +68,10 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url), path = url.pathname;
     try {
+      const canonical = new URL(env.PUBLIC_ORIGIN);
+      if (canonical.protocol === 'https:' && url.protocol === 'http:' && url.host === canonical.host) {
+        return Response.redirect(canonical.origin + url.pathname + url.search, 308);
+      }
       if (url.origin !== env.PUBLIC_ORIGIN) return new Response('Not found', {status:404});
       if (path === '/auth/login' && request.method === 'GET') return await beginGithubLogin(env);
       if (path === '/auth/callback') return await finishGithubLogin(request, env);

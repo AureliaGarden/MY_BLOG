@@ -72,3 +72,12 @@ test('browser weak ETag retains the same revision and stale edits remain rejecte
   assert.equal((await worker.fetch(request('/api/save',{method:'POST',headers,body:payload}), env)).status,200);
   assert.equal((await worker.fetch(request('/api/save',{method:'POST',headers,body:payload}), env)).status,409);
 });
+
+test('HTTP requests for this site redirect to HTTPS without trusting other hosts', async () => {
+  const {env} = await context();
+  const response = await worker.fetch(new Request('http://camellia.example/blog-data.js?sample=1'), env);
+  assert.equal(response.status, 308);
+  assert.equal(response.headers.get('Location'), 'https://camellia.example/blog-data.js?sample=1');
+  assert.equal((await worker.fetch(new Request('http://other.example/blog-data.js'), env)).status, 404);
+  assert.equal((await worker.fetch(new Request('https://camellia.example/'), env)).status, 200);
+});
