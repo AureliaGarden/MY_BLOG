@@ -61,3 +61,14 @@ test('public time endpoint returns fresh server time without caching', async () 
   assert.equal(response.status, 200); assert.equal(response.headers.get('Cache-Control'), 'no-store');
   assert.ok(Number.isFinite(now) && now >= before && now <= Date.now());
 });
+
+test('browser weak ETag retains the same revision and stale edits remain rejected', async () => {
+  const {env, cookie} = await context();
+  const read = await worker.fetch(request('/api/data',{headers:{Cookie:cookie}}), env);
+  const etag = read.headers.get('ETag');
+  assert.equal(read.headers.get('X-Blog-Revision'), etag.slice(1,-1));
+  const headers = {Origin:origin,Cookie:cookie,'X-Blog-Editor':'1','Content-Type':'application/json','If-Match':`W/${etag}`};
+  const payload = JSON.stringify({kind:'home',title:'changed in browser',description:''});
+  assert.equal((await worker.fetch(request('/api/save',{method:'POST',headers,body:payload}), env)).status,200);
+  assert.equal((await worker.fetch(request('/api/save',{method:'POST',headers,body:payload}), env)).status,409);
+});

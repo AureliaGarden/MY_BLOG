@@ -90,7 +90,7 @@ export default {
       if (path === '/api/data' && request.method === 'GET') {
         if (!(await isAdmin(request, env))) return json({error:'请先登录'}, 401);
         const state = await readState(env.DB);
-        return state ? json(state.data, 200, {'ETag':`"${state.revision}"`}) : json({error:'博客数据尚未初始化'}, 503);
+        return state ? json(state.data, 200, {'ETag':`"${state.revision}"`,'X-Blog-Revision':state.revision}) : json({error:'博客数据尚未初始化'}, 503);
       }
       if ((path === '/api/save' || path === '/api/image') && request.method === 'POST') {
         if (!trustedOrigin(request, env)) return json({error:'请求来源无效'}, 403);
@@ -104,7 +104,8 @@ export default {
         try { payload = JSON.parse(raw); } catch { return json({error:'数据格式不正确'}, 400); }
         const state = await readState(env.DB);
         if (!state) return json({error:'博客数据尚未初始化'}, 503);
-        if (request.headers.get('If-Match') !== `"${state.revision}"`) return json({error:'内容已在其他设备更新，请刷新后重试'}, 409);
+        const version = request.headers.get('If-Match');
+        if (version !== `"${state.revision}"` && version !== `W/"${state.revision}"`) return json({error:'内容已在其他设备更新，请刷新后重试'}, 409);
         try {
           const updated = applyMutation(state.data, payload);
           await writeState(env.DB, state.revision, updated);
