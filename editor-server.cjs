@@ -52,6 +52,7 @@ const files = {'/':'index.html','/index.html':'index.html','/style.css':'style.c
 http.createServer((req,res) => {
   try {
     const pathname = new URL(req.url,origin).pathname;
+    if (req.method === 'GET' && pathname === '/api/time') return reply(res,200,{now:Date.now()});
     if (req.method === 'GET' && pathname === '/api/capabilities') return reply(res,200,{momentMood:true});
     if (req.method === 'GET' && pathname === '/api/data') { const data = fullData(); data.posts = data.posts.map(p => ({...p,body:postBody(p)})); return reply(res,200,data); }
     if (req.method === 'POST' && pathname === '/api/image') {

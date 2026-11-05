@@ -54,3 +54,10 @@ test('validated image can be stored and accessed at its generated path', async (
   assert.equal(read.headers.get('Content-Type'), 'image/png');
   assert.deepEqual(new Uint8Array(await read.arrayBuffer()), png);
 });
+
+test('public time endpoint returns fresh server time without caching', async () => {
+  const {env} = await context(); const before = Date.now();
+  const response = await worker.fetch(request('/api/time'), env); const {now} = await response.json();
+  assert.equal(response.status, 200); assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  assert.ok(Number.isFinite(now) && now >= before && now <= Date.now());
+});

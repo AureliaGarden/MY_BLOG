@@ -72,6 +72,7 @@ export default {
       if (path === '/auth/login' && request.method === 'GET') return await beginGithubLogin(env);
       if (path === '/auth/callback') return await finishGithubLogin(request, env);
       if (path === '/api/session' && request.method === 'GET') return json({authenticated:await isAdmin(request, env)});
+      if (path === '/api/time' && request.method === 'GET') return json({now:Date.now()});
       if (path === '/api/capabilities' && request.method === 'GET') return json({momentMood:true});
       if (path === '/blog-data.js' && request.method === 'GET') {
         const state = await readState(env.DB);
